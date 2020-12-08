@@ -11,6 +11,8 @@ function ManageCoursePage({
   authors,
   loadAuthors,
   loadCourses,
+  saveCourse,
+  history,
   ...props
 }) {
   const [course, setCourse] = useState({ ...props.course });
@@ -21,6 +23,8 @@ function ManageCoursePage({
       loadCourses().catch((error) => {
         alert("Loading courses failed " + error);
       });
+    } else {
+      setCourse({ ...props.course });
     }
 
     if (authors.length === 0) {
@@ -28,7 +32,7 @@ function ManageCoursePage({
         alert("Loading authors failed " + error);
       });
     }
-  }, []);
+  }, [props.course]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -38,11 +42,23 @@ function ManageCoursePage({
     }));
   }
 
+  function handleSave(event) {
+    event.preventDefault();
+    saveCourse(course)
+      .then(() => {
+        history.push("/courses");
+      })
+      .catch((error) => {
+        console.log("Saving course failed " + error);
+      });
+  }
+
   return (
     <CourseForm
       course={course}
       errors={errors}
       authors={authors}
+      onSave={handleSave}
       onChange={handleChange}
     />
   );
@@ -54,11 +70,22 @@ ManageCoursePage.propTypes = {
   authors: PropTypes.array.isRequired,
   loadAuthors: PropTypes.func.isRequired,
   loadCourses: PropTypes.func.isRequired,
+  saveCourse: PropTypes.func.isRequired,
+  history: PropTypes.object.isRequired,
 };
 
-function mapStateToProps(state) {
+function getCourseBySlug(courses, slug) {
+  return courses.find((course) => course.slug === slug) || null;
+}
+
+function mapStateToProps(state, ownProps) {
+  const slug = ownProps.match.params.slug;
+  const course =
+    slug && state.courses.length > 0
+      ? getCourseBySlug(state.courses, slug)
+      : newCourse;
   return {
-    course: newCourse,
+    course,
     courses: state.courses,
     authors: state.authors,
   };
@@ -67,6 +94,7 @@ function mapStateToProps(state) {
 const mapDispatchToProps = {
   loadCourses: courseActions.loadCourses,
   loadAuthors: authorActions.loadAtuhors,
+  saveCourse: courseActions.saveCourse,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ManageCoursePage);

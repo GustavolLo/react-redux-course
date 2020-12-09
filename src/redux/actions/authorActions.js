@@ -1,6 +1,13 @@
 import * as types from "./actionTypes";
 import * as authorApi from "../../api/authorApi";
-import { beginApiCall } from "./apiStatusActions";
+import { beginApiCall, apiCallError } from "./apiStatusActions";
+
+function loadAuthorsSuccess(authors) {
+  return {
+    type: types.LOAD_AUTHORS_SUCCESS,
+    authors,
+  };
+}
 
 export function loadAtuhors() {
   return function (dispatch) {
@@ -11,14 +18,8 @@ export function loadAtuhors() {
         dispatch(loadAuthorsSuccess(authors));
       })
       .catch((error) => {
+        dispatch(apiCallError(error));
         throw error;
       });
-  };
-}
-
-function loadAuthorsSuccess(authors) {
-  return {
-    type: types.LOAD_AUTHORS_SUCCESS,
-    authors,
   };
 }
